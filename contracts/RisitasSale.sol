@@ -30,6 +30,7 @@ contract RisitasSale is Ownable  {
   error NoEtherError();
   error SaleNotActive();
   error OwnerOnlyAction();
+  error SaleNotClose();
 
   event SaleUpdated();
  
@@ -54,11 +55,11 @@ contract RisitasSale is Ownable  {
     } else if (cancelSale) {
       revert SaleNotActive();
     }
-
+    
     address beneficiary = msg.sender;
 
     uint256 etherAmount = msg.value;
-
+  
     // calculate token amount to be created
     uint256 tokens = etherAmount * rate;
 
@@ -73,8 +74,7 @@ contract RisitasSale is Ownable  {
       etherAmount,
       tokens
     );
-
-    wallet.transfer(etherAmount);
+    
   }
 
   function getIsSaleClosed() external view returns (bool) {
@@ -90,4 +90,15 @@ contract RisitasSale is Ownable  {
     emit SaleUpdated();
     cancelSale = false;
   }
+
+  function withdraw() external onlyOwner {
+    if(cancelSale == false){
+      revert SaleNotClose(); 
+    }
+    if(address(this).balance == 0){
+      revert NoEtherError(); 
+    }
+    wallet.transfer(address(this).balance);
+  }
+
 }
