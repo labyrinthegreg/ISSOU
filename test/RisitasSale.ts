@@ -81,5 +81,25 @@ describe("RisitasSale", function () {
 
             await expect(risitasSale.buyTokens({ value: ethers.parseEther('5') })).to.be.revertedWithCustomError(risitasSale ,"SaleNotActive")
         })
+        it("test", async function () {
+            const { risitasSale, owner, otherAddr, rizToken } = await loadFixture(RisitasSaleFixture)
+
+
+            await rizToken.transfer(
+                await risitasSale.getAddress(),
+                ethers.parseEther('100')
+            )
+            await expect(await risitasSale.connect(otherAddr).buyTokens({ value: ethers.parseEther("5") })).to.emit(risitasSale ,"TokenPurchase")
+            await expect(await risitasSale.connect(otherAddr).buyTokens({ value: ethers.parseEther("5") })).to.emit(risitasSale ,"TokenPurchase")
+            // console.log(await ethers.provider.getBalance(owner));
+            // console.log(await risitasSale.connect(owner).getIsSaleClosed());
+            const v1Solde = await ethers.provider.getBalance(owner)
+            await risitasSale.connect(owner).closeSale();
+            await risitasSale.connect(owner).withdraw();
+            // console.log(await risitasSale.connect(owner).getIsSaleClosed());
+            // console.log(await ethers.provider.getBalance(owner));
+            expect(await ethers.provider.getBalance(owner)).gt(v1Solde)
+        })
+        
     })
 })

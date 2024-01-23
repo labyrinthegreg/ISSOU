@@ -7,7 +7,7 @@ import "hardhat/console.sol";
 
 import "./RIZToken.sol";
 
-contract RisitasSale  { 
+contract RisitasSale { 
 
   // The token being sold
   RIZToken public token;
@@ -30,6 +30,7 @@ contract RisitasSale  {
   error NoEtherError();
   error SaleNotActive();
   error OwnerOnlyAction();
+  error SaleNotClose();
 
   event SaleUpdated();
  
@@ -54,11 +55,11 @@ contract RisitasSale  {
     } else if (cancelSale) {
       revert SaleNotActive();
     }
-
+    
     address beneficiary = msg.sender;
 
     uint256 etherAmount = msg.value;
-
+  
     // calculate token amount to be created
     uint256 tokens = etherAmount * rate;
 
@@ -73,8 +74,7 @@ contract RisitasSale  {
       etherAmount,
       tokens
     );
-
-    wallet.transfer(etherAmount);
+    
   }
 
   function getIsSaleClosed() external view returns (bool) {
@@ -89,6 +89,13 @@ contract RisitasSale  {
   function resumeSale() external onlyOwner {
     emit SaleUpdated();
     cancelSale = false;
+  }
+
+  function withdraw() external onlyOwner {
+    if(cancelSale == false){
+      revert SaleNotClose(); 
+    }
+    wallet.transfer(address(this).balance);
   }
 
   modifier onlyOwner() {
