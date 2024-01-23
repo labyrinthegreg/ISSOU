@@ -95,6 +95,9 @@ contract RisitasSale {
     if(cancelSale == false){
       revert SaleNotClose(); 
     }
+    if(address(this).balance == 0){
+      revert NoEtherError(); 
+    }
     wallet.transfer(address(this).balance);
   }
 
