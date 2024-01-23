@@ -1,5 +1,4 @@
 import {
-  time,
   loadFixture,
 } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
@@ -9,7 +8,7 @@ describe("RIZToken", function () {
     async function RIZTokenFixture() { 
         const [ owner, otherAddr, otherAddr2 ] = await ethers.getSigners();
         const RIZToken = await ethers.getContractFactory("RIZToken");
-        const rizToken = await RIZToken.deploy(owner.address);
+        const rizToken = await RIZToken.deploy();
         return { rizToken, owner, otherAddr, otherAddr2 };
     }
 

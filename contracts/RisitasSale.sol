@@ -3,11 +3,14 @@ pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "hardhat/console.sol";
+
+import "./RIZToken.sol";
 
 contract RisitasSale  { 
 
   // The token being sold
-  ERC20 public token;
+  RIZToken public token;
 
   // Address where funds are collected
   address payable public wallet;
@@ -22,19 +25,14 @@ contract RisitasSale  {
   uint256 public etherRaised;
 
   // State of the sale
-  bool private isSaleActive = true;
+  bool private cancelSale = false;
 
   error NoEtherError();
-  error NoBeneficiary();
-  error ScaleNotActive();
+  error SaleNotActive();
+  error OwnerOnlyAction();
 
-  /**
-   * Event for token purchase logging
-   * @param purchaser who paid for the tokens
-   * @param beneficiary who got the tokens
-   * @param value ethers paid for purchase
-   * @param amount amount of tokens purchased
-   */
+  event SaleUpdated();
+ 
   event TokenPurchase(
     address indexed purchaser,
     address indexed beneficiary,
@@ -42,11 +40,7 @@ contract RisitasSale  {
     uint256 amount
   );
 
-  /**
-   * @param _rate Number of token units a buyer gets per ether
-   * @param _token Address of the token being sold
-   */
-  constructor(uint256 _rate, ERC20 _token) payable {
+  constructor(uint256 _rate, RIZToken _token) payable {
     require(_rate > 0);
 
     rate = _rate;
@@ -55,17 +49,15 @@ contract RisitasSale  {
   }
 
   function buyTokens() public payable {
+    if (msg.value == 0) {
+      revert NoEtherError();
+    } else if (cancelSale) {
+      revert SaleNotActive();
+    }
+
     address beneficiary = msg.sender;
 
     uint256 etherAmount = msg.value;
-
-    if (beneficiary != address(0)) {
-      revert NoBeneficiary();
-    } else if (etherAmount != 0) {
-      revert NoEtherError();
-    } else if (isSaleActive) {
-      revert ScaleNotActive();
-    }
 
     // calculate token amount to be created
     uint256 tokens = etherAmount * rate;
@@ -74,6 +66,7 @@ contract RisitasSale  {
     etherRaised += etherAmount;
 
     token.transfer(beneficiary, tokens);
+
     emit TokenPurchase(
       msg.sender,
       beneficiary,
@@ -83,43 +76,25 @@ contract RisitasSale  {
 
     wallet.transfer(etherAmount);
   }
-  
-  /**
-   * @dev Source of tokens. Override this method to modify the way in which the crowdsale ultimately gets and sends its tokens.
-   * @param _beneficiary Address performing the token purchase
-   * @param _tokenAmount Number of tokens to be emitted
-   */
-  function _deliverTokens(
-    address _beneficiary,
-    uint256 _tokenAmount
-  )
-    internal
-  {
-    
+
+  function getIsSaleClosed() external view returns (bool) {
+    return cancelSale;
   }
 
-  function getIsSaleActive() external view returns (bool) {
-    return isSaleActive;
-  }
-
-  function cancelSale() external onlyOwner {
-    isSaleActive = false;
-    rate = 35;
+  function closeSale() external onlyOwner {
+    emit SaleUpdated();
+    cancelSale = true;
   }
 
   function resumeSale() external onlyOwner {
-    isSaleActive = true;
-  }
-
-  receive() external payable {
-    revert("This contract does not accept Ether directly"); 
+    emit SaleUpdated();
+    cancelSale = false;
   }
 
   modifier onlyOwner() {
-        require(
-            msg.sender == wallet,
-            "Only the contract owner can call this function"
-        );
-        _;
+      if (msg.sender != wallet) {
+        revert OwnerOnlyAction() ;
+      }
+      _;
     }
 }
