@@ -7,7 +7,7 @@ import "hardhat/console.sol";
 
 import "./RIZToken.sol";
 
-contract RisitasSale  { 
+contract RisitasSale is Ownable  { 
 
   // The token being sold
   RIZToken public token;
@@ -40,7 +40,7 @@ contract RisitasSale  {
     uint256 amount
   );
 
-  constructor(uint256 _rate, RIZToken _token) payable {
+  constructor(uint256 _rate, RIZToken _token) payable Ownable(msg.sender) {
     require(_rate > 0);
 
     rate = _rate;
@@ -90,11 +90,4 @@ contract RisitasSale  {
     emit SaleUpdated();
     cancelSale = false;
   }
-
-  modifier onlyOwner() {
-      if (msg.sender != wallet) {
-        revert OwnerOnlyAction() ;
-      }
-      _;
-    }
 }

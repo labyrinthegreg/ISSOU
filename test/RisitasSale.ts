@@ -50,7 +50,7 @@ describe("RisitasSale", function () {
 
             risitasSale.connect(otherAddr)
 
-            expect(await risitasSale.closeSale()).to.be.revertedWithCustomError(risitasSale, "OwnerOnlyAction")
+            expect(await risitasSale.closeSale()).to.be.revertedWithCustomError(risitasSale, "OwnableUnauthorizedAccount")
 
             await expect(await risitasSale.connect(owner).closeSale()).to.emit(risitasSale, "SaleUpdated")
             expect(await risitasSale.getIsSaleClosed()).true
