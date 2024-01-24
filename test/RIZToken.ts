@@ -20,7 +20,7 @@ describe("RIZToken", function () {
         it("Should set the right initial amount", async function () {
             const { rizToken } = await loadFixture(RIZTokenFixture)
             const totalSupply = await rizToken.totalSupply()
-            expect(totalSupply).equal(BigInt(10000*10**18))
+            expect(totalSupply).equal(ethers.parseEther("10000"))
         }) 
         it("Should assign the total supply of tokens to the owner", async function () {
             const { rizToken, owner } = await loadFixture(RIZTokenFixture)
@@ -45,7 +45,7 @@ describe("RIZToken", function () {
             const ownerBalance = await rizToken.balanceOf(owner.address)
             expect(addr2Balance).to.equal(50);
             expect(addr1Balance2).to.equal(0)
-            expect(ownerBalance).to.equal(ethers.parseUnits("10000", 18) - BigInt(50))
+            expect(ownerBalance).to.equal(ethers.parseEther("10000") - BigInt(50))
         });
     })
 

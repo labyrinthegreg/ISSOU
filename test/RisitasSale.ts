@@ -10,7 +10,11 @@ describe("RisitasSale", function () {
         const RIZToken = await ethers.getContractFactory("RIZToken");
         const rizToken = await RIZToken.deploy();
         const RisitasSale = await ethers.getContractFactory("RisitasSale");
-        const risitasSale = await RisitasSale.deploy(10, rizToken);
+        const risitasSale = await RisitasSale.deploy(rizToken);
+        await rizToken.transfer(
+            await risitasSale.getAddress(),
+            ethers.parseEther('10000')
+        )
         return { risitasSale, owner, otherAddr, otherAddr2, rizToken };
     }
 
@@ -22,7 +26,7 @@ describe("RisitasSale", function () {
         })
         it("Should get the right rate with ether", async function () {
             const { risitasSale } = await loadFixture(RisitasSaleFixture)
-            expect(await risitasSale.rate()).equal(10)
+            expect(await risitasSale.rate()).equal(50)
         })
         it("Should have 0 etherRaised and sale isn't closed", async function () {
             const { risitasSale } = await loadFixture(RisitasSaleFixture)
@@ -33,13 +37,7 @@ describe("RisitasSale", function () {
 
     describe("Buy Token", function () {
         it("Should add ethers and emit TokenPurchase", async function () {
-            const { risitasSale, otherAddr, rizToken } = await loadFixture(RisitasSaleFixture)
-
-
-            await rizToken.transfer(
-                await risitasSale.getAddress(),
-                ethers.parseEther('100')
-            )
+            const { risitasSale, otherAddr } = await loadFixture(RisitasSaleFixture)
 
             await expect(await risitasSale.connect(otherAddr).buyTokens({ value: ethers.parseEther("5") })).to.emit(risitasSale, "TokenPurchase")
 
@@ -56,27 +54,27 @@ describe("RisitasSale", function () {
             expect(await risitasSale.getIsSaleClosed()).true
         })
         it("Can't buy tokens with 0 ethers", async function () {
-            const { risitasSale, otherAddr, rizToken } = await loadFixture(RisitasSaleFixture)
-
-            await rizToken.transfer(
-                await risitasSale.getAddress(),
-                ethers.parseEther('100')
-            )
+            const { risitasSale, otherAddr } = await loadFixture(RisitasSaleFixture)
 
             risitasSale.connect(otherAddr)
 
             await expect(risitasSale.buyTokens({ value: ethers.parseEther('0') })).to.be.revertedWithCustomError(risitasSale, "NoEtherError")
         })
+        it("Can't buy tokens if there is no token", async function () {
+            const [owner, otherAddr, otherAddr2] = await ethers.getSigners();
+            const RIZToken = await ethers.getContractFactory("RIZToken");
+            const rizToken = await RIZToken.deploy();
+            const RisitasSale = await ethers.getContractFactory("RisitasSale");
+            const risitasSale = await RisitasSale.deploy(rizToken);
+
+            risitasSale.connect(otherAddr)
+
+            await expect(risitasSale.buyTokens({ value: ethers.parseEther('5') })).to.be.revertedWithCustomError(risitasSale, "NoTokenError")
+        })
         it("Can't buy tokens if sale is closed", async function () {
-            const { risitasSale, otherAddr, rizToken } = await loadFixture(RisitasSaleFixture)
+            const { risitasSale, otherAddr } = await loadFixture(RisitasSaleFixture)
 
             await risitasSale.closeSale()
-
-            await rizToken.transfer(
-                await risitasSale.getAddress(),
-                ethers.parseEther('100')
-            )
-
             risitasSale.connect(otherAddr)
 
             await expect(risitasSale.buyTokens({ value: ethers.parseEther('5') })).to.be.revertedWithCustomError(risitasSale, "SaleNotActive")
@@ -84,65 +82,113 @@ describe("RisitasSale", function () {
     })
     describe("Owner Withdraw Ether", function () {
         it("Owner should withdraw ether if sale is closed", async function () {
-            const { risitasSale, owner, otherAddr, rizToken } = await loadFixture(RisitasSaleFixture)
+            const { risitasSale, owner, otherAddr } = await loadFixture(RisitasSaleFixture)
 
-
-            await rizToken.transfer(
-                await risitasSale.getAddress(),
-                ethers.parseEther('100')
-            )
             await expect(await risitasSale.connect(otherAddr).buyTokens({ value: ethers.parseEther("5") })).to.emit(risitasSale, "TokenPurchase")
             await expect(await risitasSale.connect(otherAddr).buyTokens({ value: ethers.parseEther("5") })).to.emit(risitasSale, "TokenPurchase")
-            // console.log(await ethers.provider.getBalance(owner));
-            // console.log(await risitasSale.connect(owner).getIsSaleClosed());
+
             const v1Solde = await ethers.provider.getBalance(owner)
+
             await risitasSale.connect(owner).closeSale();
             await risitasSale.connect(owner).withdraw();
-            // console.log(await risitasSale.connect(owner).getIsSaleClosed());
-            // console.log(await ethers.provider.getBalance(owner));
+
             expect(await ethers.provider.getBalance(owner)).gt(v1Solde)
         })
         it("Can't withdraw if sale not closed", async function () {
-            const { risitasSale, owner, otherAddr, rizToken } = await loadFixture(RisitasSaleFixture)
+            const { risitasSale, owner, otherAddr } = await loadFixture(RisitasSaleFixture)
 
-
-            await rizToken.transfer(
-                await risitasSale.getAddress(),
-                ethers.parseEther('100')
-            )
             await expect(await risitasSale.connect(otherAddr).buyTokens({ value: ethers.parseEther("5") })).to.emit(risitasSale, "TokenPurchase")
             await expect(await risitasSale.connect(otherAddr).buyTokens({ value: ethers.parseEther("5") })).to.emit(risitasSale, "TokenPurchase")
 
-            await expect(risitasSale.connect(owner).withdraw()).to.be.revertedWithCustomError(risitasSale, "SaleNotClose")
+            await expect(risitasSale.connect(owner).withdraw()).to.be.revertedWithCustomError(risitasSale, "SaleNotActive")
         })
         it("Can't withdraw if nothing to withdraw", async function () {
-            const { risitasSale, owner, otherAddr, rizToken } = await loadFixture(RisitasSaleFixture)
-
-            await rizToken.transfer(
-                await risitasSale.getAddress(),
-                ethers.parseEther('100')
-            )
+            const { risitasSale, owner } = await loadFixture(RisitasSaleFixture)
 
             await risitasSale.connect(owner).closeSale();
             
             await expect(risitasSale.connect(owner).withdraw()).to.be.revertedWithCustomError(risitasSale, "NoEtherError")
         })
-        // ToDo : Erreur ne reconnais pas l'erreur OwnerOnlyAction() dans le expect alors qu'elle est bien généré
-        // it("Only owner can withdraw", async function () {
-        //     const { risitasSale, owner, otherAddr, rizToken  } = await loadFixture(RisitasSaleFixture)
+        it("Only owner can withdraw", async function () {
+            const { risitasSale, owner, otherAddr  } = await loadFixture(RisitasSaleFixture)
 
-        //     await rizToken.transfer(
-        //         await risitasSale.getAddress(),
-        //         ethers.parseEther('100')
-        //     )
-
-        //     await expect(await risitasSale.connect(otherAddr).buyTokens({ value: ethers.parseEther("5") })).to.emit(risitasSale, "TokenPurchase")
-        //     await expect(await risitasSale.connect(otherAddr).buyTokens({ value: ethers.parseEther("5") })).to.emit(risitasSale, "TokenPurchase")
-        //     await risitasSale.connect(owner).closeSale();
+            await expect(await risitasSale.connect(otherAddr).buyTokens({ value: ethers.parseEther("5") })).to.emit(risitasSale, "TokenPurchase")
+            await expect(await risitasSale.connect(otherAddr).buyTokens({ value: ethers.parseEther("5") })).to.emit(risitasSale, "TokenPurchase")
+            await risitasSale.connect(owner).closeSale();
             
-
-        //     expect(await risitasSale.connect(otherAddr).withdraw()).to.be.revertedWithCustomError(risitasSale, "OwnerOnlyAction")
-        // })
-
+            risitasSale.connect(otherAddr)
+            
+            expect(await risitasSale.withdraw()).to.be.revertedWithCustomError(risitasSale, "OwnableUnauthorizedAccount")
+        })
     })
+    describe("Owner Withdraw Remaining Tokens", function () {
+        it("Owner should withdraw tokens if sale is closed", async function () {
+            const { risitasSale, owner, otherAddr, rizToken } = await loadFixture(RisitasSaleFixture)
+
+            await expect(await risitasSale.connect(otherAddr).buyTokens({ value: ethers.parseEther("5") })).to.emit(risitasSale, "TokenPurchase")
+            await expect(await risitasSale.connect(otherAddr).buyTokens({ value: ethers.parseEther("5") })).to.emit(risitasSale, "TokenPurchase")
+
+            await risitasSale.connect(owner).closeSale();
+            await risitasSale.connect(owner).withdrawLastTokens();
+            
+            expect(await rizToken.balanceOf(owner)).equal(ethers.parseEther("9500"))
+        })
+        it("Can't withdraw if sale not closed", async function () {
+            const { risitasSale, owner, otherAddr } = await loadFixture(RisitasSaleFixture)
+
+            await expect(await risitasSale.connect(otherAddr).buyTokens({ value: ethers.parseEther("5") })).to.emit(risitasSale, "TokenPurchase")
+            await expect(await risitasSale.connect(otherAddr).buyTokens({ value: ethers.parseEther("5") })).to.emit(risitasSale, "TokenPurchase")
+
+            await expect(risitasSale.connect(owner).withdrawLastTokens()).to.be.revertedWithCustomError(risitasSale, "SaleNotActive")
+        })
+        it("Can't withdraw if nothing to withdraw", async function () {
+            const [owner] = await ethers.getSigners();
+            const RIZToken = await ethers.getContractFactory("RIZToken");
+            const rizToken = await RIZToken.deploy();
+            const RisitasSale = await ethers.getContractFactory("RisitasSale");
+            const risitasSale = await RisitasSale.deploy(rizToken);
+
+            await risitasSale.connect(owner).closeSale();
+            
+            await expect(risitasSale.connect(owner).withdrawLastTokens()).to.be.revertedWithCustomError(risitasSale, "NoTokenError")
+        })
+        it("Only owner can withdraw", async function () {
+            const { risitasSale, owner, otherAddr  } = await loadFixture(RisitasSaleFixture)
+
+            await expect(await risitasSale.connect(otherAddr).buyTokens({ value: ethers.parseEther("5") })).to.emit(risitasSale, "TokenPurchase")
+            await expect(await risitasSale.connect(otherAddr).buyTokens({ value: ethers.parseEther("5") })).to.emit(risitasSale, "TokenPurchase")
+            await risitasSale.connect(owner).closeSale();
+            
+            risitasSale.connect(otherAddr)
+            
+            expect(await risitasSale.withdrawLastTokens()).to.be.revertedWithCustomError(risitasSale, "OwnableUnauthorizedAccount")
+        })
+    })
+    describe("Update rate for different state", function () { 
+        it("Should set rate right for different state", async function () {
+            const { risitasSale } = await loadFixture(RisitasSaleFixture)
+
+            expect(await risitasSale.rate()).equal(50)
+            expect((await risitasSale.actualState()).toString()).equal("1")
+
+            await risitasSale.icoMoneyState()
+            expect(await risitasSale.rate()).equal(10)
+            expect((await risitasSale.actualState()).toString()).equal("0")
+
+            await risitasSale.preSaleMoneyState()
+            expect(await risitasSale.rate()).equal(23)
+            expect((await risitasSale.actualState()).toString()).equal("2")
+
+            await risitasSale.loveMoneyState()
+            expect(await risitasSale.rate()).equal(50)
+            expect((await risitasSale.actualState()).toString()).equal("1")
+        })
+        it("Only owner can update State", async function () {
+            const { risitasSale, otherAddr } = await loadFixture(RisitasSaleFixture)
+            risitasSale.connect(otherAddr)
+            expect(await risitasSale.icoMoneyState()).to.be.revertedWithCustomError(risitasSale, "OwnableUnauthorizedAccount")
+            expect(await risitasSale.preSaleMoneyState()).to.be.revertedWithCustomError(risitasSale, "OwnableUnauthorizedAccount")
+            expect(await risitasSale.loveMoneyState()).to.be.revertedWithCustomError(risitasSale, "OwnableUnauthorizedAccount")
+        })
+    }) 
 })
