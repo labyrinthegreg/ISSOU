@@ -5,12 +5,13 @@ import 'bootstrap/dist/css/bootstrap.min.css'; // Import Bootstrap CSS
 import artifacts from './contracts/RisitasSale.json';
 
 function App() {
-  const [ provider, setProvider ] = useState(null);
-  const [ signer , setSigner ] = useState(null)
+  const [provider, setProvider] = useState(null);
+  const [signer, setSigner] = useState(null);
   const [network, setNetwork] = useState('');
   const [contract, setContract] = useState(null);
   const [etherRaised, setEtherRaised] = useState(0);
   const [tokenRate, setTokenRate] = useState(0);
+  const [etherAmount, setEtherAmount] = useState('0.000000000001'); // Default value, you can set this to any initial value
 
   useEffect(() => {
     const initializeProvider = async () => {
@@ -49,15 +50,14 @@ function App() {
 
     const getSigner = async () => {
       if (provider) {
-        setSigner(await provider.getSigner())
+        setSigner(await provider.getSigner());
       }
-    }
-    
+    };
 
     getNetwork();
     getContract();
     getSigner();
-  }, [ provider ]);
+  }, [provider]);
 
   useEffect(() => {
     const getDefaultData = async () => {
@@ -72,7 +72,11 @@ function App() {
     };
 
     getDefaultData();
-  }, [contract])
+  }, [contract]);
+
+  const handleEtherAmountChange = (e) => {
+    setEtherAmount(e.target.value);
+  };
 
   const isSaleOpen = async () => {
     try {
@@ -88,11 +92,8 @@ function App() {
   const buyTokens = async () => {
     try {
       if (contract) {
-        
-        console.log(signer);
-
         // Prompt the user to confirm the transaction
-        await contract.buyTokens({ from: signer, value: ethers.parseEther('1') });
+        await contract.connect(signer).buyTokens({ from: signer, value: ethers.parseEther(etherAmount) });
 
         // Update contract details after the transaction
         const etherRaised = await contract.etherRaised();
@@ -112,10 +113,24 @@ function App() {
       <p className="lead">Connected Network: {network}</p>
       <p>Ether Raised: {etherRaised} ETH</p>
       <p>Token Rate: {tokenRate}</p>
+
+      <div className="mb-3">
+        <label htmlFor="etherAmount" className="form-label">
+          Ether Amount for Tokens:
+        </label>
+        <input
+          type="text"
+          className="form-control"
+          id="etherAmount"
+          value={etherAmount}
+          onChange={handleEtherAmountChange}
+        />
+      </div>
+
       <button className="btn btn-primary" onClick={isSaleOpen}>
         Check Sale Status
       </button>
-    <button className="btn btn-success" onClick={buyTokens}>
+      <button className="btn btn-success" onClick={buyTokens}>
         Buy Tokens
       </button>
     </div>
