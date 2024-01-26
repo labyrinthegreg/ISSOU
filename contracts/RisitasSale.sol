@@ -123,7 +123,7 @@ contract RisitasSale is Ownable  {
 
   function withdraw() external onlyOwner {
     if(cancelSale == false){
-      revert SaleNotActive(); 
+      revert SaleNotClose(); 
     }
     if(address(this).balance == 0){
       revert NoEtherError(); 
@@ -132,8 +132,8 @@ contract RisitasSale is Ownable  {
   }
 
   function withdrawLastTokens() external onlyOwner {
-    if (!cancelSale) {
-      revert SaleNotActive();
+    if (cancelSale == false) {
+      revert SaleNotClose();
     }
     if (token.balanceOf(address(this)) == 0) {
       revert NoTokenError();

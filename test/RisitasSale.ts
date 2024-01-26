@@ -104,7 +104,7 @@ describe("RisitasSale", function () {
             await expect(await risitasSale.connect(otherAddr).buyTokens({ value: ethers.parseEther("5") })).to.emit(risitasSale, "TokenPurchase")
             await expect(await risitasSale.connect(otherAddr).buyTokens({ value: ethers.parseEther("5") })).to.emit(risitasSale, "TokenPurchase")
 
-            await expect(risitasSale.connect(owner).withdraw()).to.be.revertedWithCustomError(risitasSale, "SaleNotActive")
+            await expect(risitasSale.connect(owner).withdraw()).to.be.revertedWithCustomError(risitasSale, "SaleNotClose")
         })
         it("Can't withdraw if nothing to withdraw", async function () {
             const { risitasSale, owner } = await loadFixture(RisitasSaleFixture)
@@ -143,7 +143,7 @@ describe("RisitasSale", function () {
             await expect(await risitasSale.connect(otherAddr).buyTokens({ value: ethers.parseEther("5") })).to.emit(risitasSale, "TokenPurchase")
             await expect(await risitasSale.connect(otherAddr).buyTokens({ value: ethers.parseEther("5") })).to.emit(risitasSale, "TokenPurchase")
 
-            await expect(risitasSale.connect(owner).withdrawLastTokens()).to.be.revertedWithCustomError(risitasSale, "SaleNotActive")
+            await expect(risitasSale.connect(owner).withdrawLastTokens()).to.be.revertedWithCustomError(risitasSale, "SaleNotClose")
         })
         it("Can't withdraw if nothing to withdraw", async function () {
             const [owner] = await ethers.getSigners();
