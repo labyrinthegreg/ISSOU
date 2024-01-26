@@ -38,15 +38,16 @@ describe("RisitasVesting", function () {
     it("should not add beneficiary when vesting started", async function () {
         const { risVesting, otherAddr } = await loadFixture(RisitasVestingFixture);
         await risVesting.updateStartVesting();
-        expect(await risVesting.addBeneficiary(otherAddr.address, ethers.parseEther("100"))).to.be.revertedWithCustomError(risVesting,"VestingActive");
+        await expect(risVesting.addBeneficiary(otherAddr.address, ethers.parseEther("100"))).to.be.revertedWithCustomError(risVesting,"VestingActive");
     });
 
     it("should release vested tokens", async function () {
-        const { risVesting, otherAddr, rizToken} = await loadFixture(RisitasVestingFixture);
-        await risVesting.addBeneficiary(otherAddr.address, ethers.parseEther("100"));
+        const { risVesting, otherAddr, rizToken, risitasSale } = await loadFixture(RisitasVestingFixture);
+        risitasSale.connect(otherAddr).buyTokens({ value: ethers.parseEther("100") });
         await risVesting.updateStartVesting();
 
-        setTimeout(async () => { 
+        setTimeout(async () => {
+            
             await risVesting.release(otherAddr.address);
             
             const beneficiaryAmount = await risVesting.beneficiaryAmount(otherAddr.address);
@@ -54,7 +55,7 @@ describe("RisitasVesting", function () {
             
             const beneficiaryBalance = await rizToken.balanceOf(otherAddr.address);
             expect(beneficiaryBalance).to.equal(ethers.parseEther("100"));
-        }, 1);
+        }, 10000);
     });
 
     it("should not release tokens before vesting starts", async function () {
@@ -69,8 +70,6 @@ describe("RisitasVesting", function () {
         
         await risVesting.updateStartVesting();
 
-        setTimeout(async () => { 
-            await expect(risVesting.release(otherAddr.address)).to.be.revertedWithCustomError(risVesting, "NoTokensToRelease");
-        }, 1);
+        await expect(risVesting.release(otherAddr.address)).to.be.revertedWithCustomError(risVesting, "NoTokensToRelease");
     });
 });

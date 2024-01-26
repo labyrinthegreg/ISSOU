@@ -56,7 +56,7 @@ contract RisitasSale is Ownable  {
     updateRateForState(State.LOVEMONEY);
   }
 
-  function buyTokens() public payable {
+  function buyTokens() public payable{
     if (msg.value == 0) {
       revert NoEtherError();
     } else if (cancelSale) {

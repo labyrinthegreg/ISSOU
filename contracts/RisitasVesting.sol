@@ -14,7 +14,7 @@ contract RisitasVesting is Ownable {
 
     ERC20 public token;
 
-    uint64 private start;
+    uint64 public start;
     uint64 private immutable duration;
 
     mapping (address beneficiary => uint256) public balances;
@@ -41,7 +41,7 @@ contract RisitasVesting is Ownable {
     }
 
     function isVestingActive() public view returns (bool) {
-        return start != 0 && (block.timestamp - duration >= start && block.timestamp <= start + duration);
+        return start != 0 && (block.timestamp >= start && block.timestamp <= start + duration);
     }
 
     function addBeneficiary(address beneficiary, uint256 amount) public {

@@ -23,12 +23,13 @@ async function main() {
   const risitasSale = await RisitasSale.deploy(rizToken, await risitasVesting.getAddress(), risitasVesting);
 
   await rizToken.waitForDeployment();
+  await risitasVesting.waitForDeployment();
   await risitasSale.waitForDeployment();
 
   console.log("PolygonScan verification in progress...");
   await verify(rizToken, [])
-  await verify(risitasVesting, [await rizToken.getAddress(), await risitasVesting.getAddress(), await risitasVesting.getAddress()])
-  await verify(risitasSale, [await rizToken.getAddress()])
+  await verify(risitasVesting, [await rizToken.getAddress()])
+  await verify(risitasSale, [await rizToken.getAddress(), await risitasVesting.getAddress(), await risitasVesting.getAddress()])
   console.log("PolygonScan verification done. ✅");
   
   console.log("RIZToken: " + await rizToken.getAddress());

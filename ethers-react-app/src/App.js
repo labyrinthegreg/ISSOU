@@ -39,7 +39,7 @@ function App() {
 
     const getContract = async () => {
       if (provider) {
-        const contractAddress = "0x3D49409d34D215414E92f580e0244fCd8E406524";
+        const contractAddress = "0xF357573561E19E5c525F92eEdc0D83fd0f97A81D";
         const contractInstance = new ethers.Contract(
           contractAddress,
           artifacts.abi,
