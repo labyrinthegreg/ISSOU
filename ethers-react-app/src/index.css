@@ -11,3 +11,69 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+
+.full-page {
+  width: 100vw; 
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(165deg, rgba(0,0,0,1) 0%, rgba(127,39,78,1) 95%, rgba(183,46,90,1) 100%);
+}
+
+.container {
+  width: 40%;
+  height: auto;
+  border: 2px solid rgb(137, 137, 137);
+  border-radius: 5px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: #fff;
+}
+
+.token-box {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.token {
+  width: 60px;
+  height: 60px;
+}
+
+.token img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50px;
+}
+
+.input-box {
+  display: flex;
+  flex-direction: column;
+}
+
+.btn-box {
+  display: flex;
+  gap: 25px;
+  margin: 15px 0;
+}
+
+.btn {
+  padding: 10px;
+  border-color: transparent;
+  border-radius: 5px;
+  color: #fff;
+}
+
+.status {
+  background-color: rgb(2, 111, 229);
+}
+
+.buy {
+  background-color: rgb(0, 210, 0);
+}

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ethers } from 'ethers';
-import 'bootstrap/dist/css/bootstrap.min.css'; // Import Bootstrap CSS
+//import 'bootstrap/dist/css/bootstrap.min.css'; // Import Bootstrap CSS
+
 
 import artifacts from './contracts/RisitasSale.json';
 
@@ -108,7 +109,48 @@ function App() {
   };
 
   return (
-    <div className="container mt-5">
+    <div className='full-page'>
+      <div className='container'>
+        <h1>Welcome on Risitas</h1> 
+        <div className='token-box'>
+          <div className='token'>
+            <img src={require('./risitas.png')} alt='risitas'></img>
+          </div>
+          <p> 1 $RIZ ≃ 0.02 $ETH</p>
+        </div>
+        <p className="lead">Connected Network: {network}</p>
+        <p>Ether Raised: {etherRaised} ETH</p>
+        <p>Token Rate: {tokenRate}</p>
+        <div className="input-box">
+          <label htmlFor="etherAmount" className="form-label">
+            Ether Amount for Tokens:
+          </label>
+          <input
+            type="text"
+            className="etherInput"
+            id="etherAmount"
+            value={etherAmount}
+            onChange={handleEtherAmountChange}
+          />
+        </div>
+        <div className='btn-box'>
+          <button className="btn status" onClick={isSaleOpen}>
+            Check Sale Status
+          </button>
+          <button className="btn buy" onClick={buyTokens}>
+            Buy Tokens
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default App;
+
+/*
+<div className="container mt-5">
+      <h1>Welcome on Risitas</h1>
       <h1 className="mb-4">Risitas Sale</h1>
       <p className="lead">Connected Network: {network}</p>
       <p>Ether Raised: {etherRaised} ETH</p>
@@ -134,7 +176,4 @@ function App() {
         Buy Tokens
       </button>
     </div>
-  );
-}
-
-export default App;
+    */
