@@ -9,13 +9,15 @@ describe("RisitasSale", function () {
         const [owner, otherAddr, otherAddr2] = await ethers.getSigners();
         const RIZToken = await ethers.getContractFactory("RIZToken");
         const rizToken = await RIZToken.deploy();
+        const risitasVesting = await ethers.getContractFactory("RisitasVesting");
+        const risVesting = await risitasVesting.deploy(rizToken);
         const RisitasSale = await ethers.getContractFactory("RisitasSale");
-        const risitasSale = await RisitasSale.deploy(rizToken);
+        const risitasSale = await RisitasSale.deploy(rizToken, await risVesting.getAddress(), risVesting);
         await rizToken.transfer(
             await risitasSale.getAddress(),
             ethers.parseEther('10000')
         )
-        return { risitasSale, owner, otherAddr, otherAddr2, rizToken };
+        return { risitasSale, owner, otherAddr, otherAddr2, rizToken, risVesting };
     }
 
     describe("Deployment", function () {
@@ -64,8 +66,10 @@ describe("RisitasSale", function () {
             const [owner, otherAddr, otherAddr2] = await ethers.getSigners();
             const RIZToken = await ethers.getContractFactory("RIZToken");
             const rizToken = await RIZToken.deploy();
+            const risitasVesting = await ethers.getContractFactory("RisitasVesting");
+            const risVesting = await risitasVesting.deploy(rizToken);
             const RisitasSale = await ethers.getContractFactory("RisitasSale");
-            const risitasSale = await RisitasSale.deploy(rizToken);
+            const risitasSale = await RisitasSale.deploy(rizToken, await risVesting.getAddress(), risVesting);
 
             risitasSale.connect(otherAddr)
 
@@ -145,8 +149,10 @@ describe("RisitasSale", function () {
             const [owner] = await ethers.getSigners();
             const RIZToken = await ethers.getContractFactory("RIZToken");
             const rizToken = await RIZToken.deploy();
+            const risitasVesting = await ethers.getContractFactory("RisitasVesting");
+            const risVesting = await risitasVesting.deploy(rizToken);
             const RisitasSale = await ethers.getContractFactory("RisitasSale");
-            const risitasSale = await RisitasSale.deploy(rizToken);
+            const risitasSale = await RisitasSale.deploy(rizToken, await risVesting.getAddress(), risVesting);
 
             await risitasSale.connect(owner).closeSale();
             

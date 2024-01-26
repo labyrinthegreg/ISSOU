@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "hardhat/console.sol";
 
+import "./RisitasVesting.sol";
 import "./RIZToken.sol";
 
 contract RisitasSale is Ownable  { 
@@ -20,6 +21,10 @@ contract RisitasSale is Ownable  {
   uint256 public etherRaised;
 
   bool private cancelSale = false;
+
+  address payable public vestingAddress;
+
+  RisitasVesting public vesting;
 
   enum State {
     ICO,
@@ -42,10 +47,12 @@ contract RisitasSale is Ownable  {
     uint256 amount
   );
 
-  constructor(RIZToken _token) payable Ownable(msg.sender) {
+  constructor(RIZToken _token, address _vestingAddress, RisitasVesting _vesting) payable Ownable(msg.sender) {
 
     wallet = payable(msg.sender);
     token = _token;
+    vestingAddress = payable(_vestingAddress);
+    vesting = _vesting;
     updateRateForState(State.LOVEMONEY);
   }
 
@@ -66,7 +73,9 @@ contract RisitasSale is Ownable  {
 
     etherRaised += etherAmount;
 
-    token.transfer(beneficiary, tokens);
+    token.transfer(vestingAddress, tokens);
+
+    vesting.addBeneficiary(beneficiary, tokens);
 
     emit TokenPurchase(
       msg.sender,
@@ -74,7 +83,6 @@ contract RisitasSale is Ownable  {
       etherAmount,
       tokens
     );
-    
   }
 
 
